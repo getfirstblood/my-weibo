@@ -1,0 +1,30 @@
+//
+//  WriteController.h
+//  tabbar
+//
+//  Created by 伟伟 高 on 12-5-16.
+//  Copyright (c) 2012年 cienet. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface WriteController : UIViewController<UIImagePickerControllerDelegate,UINavigationControllerDelegate>
+{
+    UIImageView *imageView_;     //所选图片
+    UIButton    *takePictureBtn_;   //拍照按钮
+    UIButton    *selectPictureBtn_;  //选取照片按钮
+    UITextView *field_;
+    NSString *fileurl_;
+}
+
+@property (nonatomic, retain) IBOutlet UIImageView *imageView;
+@property (nonatomic, retain) IBOutlet UIButton *takePictureBtn;
+@property (nonatomic, retain) IBOutlet UIButton *selectPictureBtn;
+@property (nonatomic, retain) IBOutlet UITextView  *field;
+@property (nonatomic, copy) NSString *fileurl;
+
+- (void)goback:(id)sender;
+- (void)confirm:(id)sender;
+- (IBAction)getCameraPicture:(id)sender;
+- (IBAction)selectExistingPicture;
+@end

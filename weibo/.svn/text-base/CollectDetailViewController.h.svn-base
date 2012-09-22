@@ -1,0 +1,42 @@
+//
+//  CollectDetailViewController.h
+//  tabbar
+//
+//  Created by ji jijiandong on 12-5-25.
+//  Copyright 2012年 cienet. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@class CollectViewController;
+
+#import "BusinessListenerProtocol.h"
+#import "Result.h"
+
+@interface CollectDetailViewController : UIViewController <UITableViewDataSource,UITableViewDelegate,BusinessListenerProtocol>{
+    
+    UIButton *headBtn_;         //收藏细节视图主人头像
+    UILabel  *nameLabel_;       //收藏细节视图主人姓名
+    UIButton *transmitBtn_;     //收藏细节视图转播按钮
+    UIButton *commentBtn_;      //收藏细节视图评论按钮
+    UIButton *moreBtn_;         //收藏细节视图更多按钮
+    UITableView *collectView_;  //收藏 细节视图内容和评论视图
+    CollectViewController *collect_;   //收藏列表实例
+    Result *ret_;
+}
+
+@property (nonatomic, retain) IBOutlet UIButton *headBtn;
+@property (nonatomic, retain) IBOutlet UILabel *nameLabel;
+@property (nonatomic, retain) IBOutlet UIButton *transmitBtn;
+@property (nonatomic, retain) IBOutlet UIButton *commentBtn;
+@property (nonatomic, retain) IBOutlet UIButton *moreBtn;
+@property (nonatomic, retain) IBOutlet UITableView *collectView;
+@property (nonatomic, retain) CollectViewController*collect;
+@property (nonatomic, retain) Result   *ret;
+
+- (IBAction)headBtnClicked;
+- (IBAction)transmitBtnClicked;
+- (IBAction)commentBtnClicked;
+- (IBAction)moreBtnClicked;
+
+@end

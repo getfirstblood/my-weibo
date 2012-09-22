@@ -1,0 +1,327 @@
+//
+//  TimeLine_Network.m
+//  tabbar
+//
+//  Created by 伟伟 高 on 12-5-16.
+//  Copyright (c) 2012年 cienet. All rights reserved.
+//
+
+#import "TimeLine_Network.h"
+#import "tabbarAppDelegate.h"
+#import "QWeiboAsyncApi.h"
+#import "HomePageParse.h"
+#import "InfoParse.h"
+#import "BusinessFramework.h"
+#define kAppIconHeight 48
+@implementation TimeLine_Network
+@synthesize queue = queue_;
+@synthesize weiboListData = weiboListData_;
+@synthesize connection = connection_;
+@synthesize capability = capability_;
+@synthesize infoRecord = infoRecord_;
+@synthesize indexPathInTableView = indexPathInTableView_;
+@synthesize tag = tag_;
+@synthesize inforesult = inforesult_;
+#pragma mark method
+- (void)dealloc
+{
+    [connection_ release];
+    [weiboListData_ release];
+    [queue_ release];
+    [indexPathInTableView_ release];
+    [infoRecord_ release];
+    [super dealloc];
+}
+- (void)startDownLoadWithInParam:(id)inParam andOutParam:(id)outParam
+{
+    tabbarAppDelegate *weiboDelegate = (tabbarAppDelegate *)[[UIApplication sharedApplication] delegate];
+    QWeiboAsyncApi *api = [[[QWeiboAsyncApi alloc] init] autorelease];
+    switch (self.capability) {
+        case MakeID(weibo_Relation, re_list):
+        {
+            NSString *str = (NSString *)inParam;
+            self.connection = [api getCommentRelayWithConsumerKey:weiboDelegate.appKey 
+                                                   consumerSecret:weiboDelegate.appSecret 
+                                                   accessTokenKey:weiboDelegate.tokenKey 
+                                                accessTokenSecret:weiboDelegate.tokenSecret 
+                                                       resultType:RESULTTYPE_XML 
+                                                             flag:2
+                                                           rootId:str
+                                                        pageFlage:PAGEFLAG_FIRST
+                                                         pageTime:@"0" 
+                                                           reqNum:20
+                                                        twitterId:0 
+                                                         delegate:self];
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+- (void)startDownLoad
+{
+    tabbarAppDelegate *weiboDelegate = (tabbarAppDelegate *)[[UIApplication sharedApplication] delegate];
+    QWeiboAsyncApi *api = [[[QWeiboAsyncApi alloc] init] autorelease];
+    switch (self.capability) {
+        case MakeID(time_line, home_timeline):
+            self.connection = [api getHomeMsgWithConsumerKey:weiboDelegate.appKey
+                                              consumerSecret:weiboDelegate.appSecret
+                                              accessTokenKey:weiboDelegate.tokenKey
+                                           accessTokenSecret:weiboDelegate.tokenSecret
+                                                  resultType:RESULTTYPE_XML
+                                                   pageFlage:PAGEFLAG_FIRST
+                                                     nReqNum:20
+                                                    delegate:self];
+            break;
+        case MakeID(weibo_Relation, add):
+        {
+            NSString *content = @"abcdefgh";
+            self.connection	= [api publishMsgWithConsumerKey:weiboDelegate.appKey 
+                                              consumerSecret:weiboDelegate.appSecret 
+                                              accessTokenKey:weiboDelegate.tokenKey 
+                                           accessTokenSecret:weiboDelegate.tokenSecret 
+                                                     content:content
+                                                   imageFile:nil
+                                                  resultType:RESULTTYPE_JSON 
+                                                    delegate:self];
+        }
+            break;
+        case MakeID(weibo_Relation, re_list):{
+            self.connection = [api getCommentRelayWithConsumerKey:weiboDelegate.appKey 
+                                                   consumerSecret:weiboDelegate.appSecret 
+                                                   accessTokenKey:weiboDelegate.tokenKey 
+                                                accessTokenSecret:weiboDelegate.tokenSecret 
+                                                       resultType:RESULTTYPE_XML 
+                                                             flag:2
+                                                           rootId:@"152501104449024"
+                                                        pageFlage:PAGEFLAG_FIRST
+                                                         pageTime:@"0" 
+                                                           reqNum:20
+                                                        twitterId:0 
+                                                         delegate:self];
+        }
+            break;
+        case MakeID(data_Store, addt):{
+            self.connection = [api addtWithConsumerKey:weiboDelegate.appKey 
+                                        consumerSecret:weiboDelegate.appSecret 
+                                        accessTokenKey:weiboDelegate.tokenKey
+                                     accessTokenSecret:weiboDelegate.tokenSecret 
+                                            resultType:RESULTTYPE_XML 
+                                               weiboId:@"117164072806889"
+                                              delegate:self];
+        }
+            break;
+        case MakeID(account_Relation, info):{
+            self.connection = [api getInfoWithConsumerKey:weiboDelegate.appKey 
+                                           consumerSecret:weiboDelegate.appSecret 
+                                           accessTokenKey:weiboDelegate.tokenKey 
+                                        accessTokenSecret:weiboDelegate.tokenSecret
+                                               resultType:RESULTTYPE_XML 
+                                                 delegate:self];
+        }
+            break;
+        case MakeID(weibo_Relation, re_add):{
+            self.connection = [api re_addtWithConsumerKey:weiboDelegate.appKey
+                                           consumerSecret:weiboDelegate.appSecret 
+                                           accessTokenKey:weiboDelegate.tokenKey 
+                                        accessTokenSecret:weiboDelegate.tokenSecret
+                                               resultType:RESULTTYPE_XML
+                                                  content:nil
+                                                 clientip:nil 
+                                                     jing:nil
+                                                      wei:nil 
+                                                     reid:nil
+                                                 delegate:self];
+        }
+            break;
+        case MakeID(weibo_Relation, comment):{
+            self.connection = [api commentWithConsumerKey:weiboDelegate.appKey 
+                                           consumerSecret:weiboDelegate.appSecret
+                                           accessTokenKey:weiboDelegate.tokenKey 
+                                        accessTokenSecret:weiboDelegate.tokenSecret 
+                                               resultType:RESULTTYPE_XML 
+                                                  content:nil 
+                                                 clientip:nil 
+                                                     jing:nil 
+                                                      wei:nil 
+                                                     reid:nil
+                                                 delegate:self];
+        }
+            break;
+        case MakeID(data_Store, list_t):{
+            [api getlist_tWithConsumerKey:weiboDelegate.appKey
+                           consumerSecret:weiboDelegate.appSecret 
+                           accessTokenKey:weiboDelegate.tokenKey 
+                        accessTokenSecret:weiboDelegate.tokenSecret
+                               resultType:RESULTTYPE_XML 
+                                pageFlage:PAGEFLAG_FIRST 
+                                 pagetime:nil
+                                  nReqNum:20 
+                                   lastid:nil 
+                                 delegate:self];
+        }
+            break;
+        case MakeID(time_line, mentions_timeline):{
+            [api getmentionWithConsumerKey:weiboDelegate.appKey
+                            consumerSecret:weiboDelegate.appSecret
+                            accessTokenKey:weiboDelegate.tokenKey
+                         accessTokenSecret:weiboDelegate.tokenSecret 
+                                resultType:RESULTTYPE_XML 
+                                 pageFlage:PAGEFLAG_FIRST 
+                                  pageTime:nil
+                                   nReqNum:20 
+                                    lastid:nil 
+                               contenttype:nil 
+                                  delegate:self];
+        }
+            break;
+        case MakeID(time_line, headdownload):
+        {
+            NSString *headrul = nil;
+            if([self.tag isEqualToString:@"info"])
+                headrul = [NSString stringWithFormat:@"%@/100",self.inforesult.data.head];
+            else
+                headrul = [NSString stringWithFormat:@"%@/50",infoRecord_.head];
+//            NSURLConnection *conn = [[NSURLConnection alloc] initWithRequest:
+//                                     [NSURLRequest requestWithURL:
+//                                      [NSURL URLWithString:headrul]] delegate:self];
+            
+            NSURLRequest *urlRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:headrul]];
+            self.connection = [[[NSURLConnection alloc] initWithRequest:urlRequest delegate:self startImmediately:NO] autorelease];
+            [self.connection scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+            [self.connection start];
+//            self.connection = conn;
+//            [conn release];
+        }
+            break;
+        default:
+            break;
+    }
+    //    NSURLRequest *urlRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:TopPaidAppsFeed]];
+    //    self.weiboMentionConnection= [[[NSURLConnection alloc] initWithRequest:urlRequest delegate:self] autorelease];
+}
+- (void)cancelDownLoad
+{
+    
+}
+#pragma mark urlconnection method
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
+{
+    [self.weiboListData appendData:data];
+}
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
+{
+    NSLog(@"服务器出错");
+}
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection
+{
+    self.connection = nil;
+    switch (self.capability) {
+        case MakeID(time_line, home_timeline):
+        {
+            self.queue = [[NSOperationQueue alloc] init];
+            HomePageParse *parser = [[HomePageParse alloc] initWithData:self.weiboListData
+                                                               delegate:nil];
+            parser.capability = MakeID(time_line, home_timeline);
+            [self.queue addOperation:parser];
+            [parser release];
+        }
+            break;
+        case MakeID(weibo_Relation, add):
+            NSLog(@"sucess");
+            break;
+        case MakeID(weibo_Relation, re_list):{
+            if(self.queue == nil)
+                self.queue = [[[NSOperationQueue alloc] init] autorelease];
+            HomePageParse *parser = [[HomePageParse alloc] initWithData:self.weiboListData delegate:nil];
+            parser.capability = MakeID(weibo_Relation, re_list);
+            [self.queue addOperation:parser];
+            [parser release];
+        }
+            break;
+        case MakeID(data_Store, addt):
+            NSLog(@"sucess");
+            break;
+        case MakeID(account_Relation, info):{
+            NSLog(@"sucess");
+            if(self.queue == nil)
+                self.queue = [[[NSOperationQueue alloc] init] autorelease];
+            InfoParse   *parser = [[InfoParse alloc] initWithData:self.weiboListData];
+            [self.queue addOperation:parser];
+            [parser release];
+        }
+            break;
+        case MakeID(weibo_Relation, re_add):{
+            NSLog(@"sucess");
+        }
+            break;
+        case MakeID(weibo_Relation, comment):{
+            NSLog(@"sucess");
+        }
+            break;
+        case MakeID(data_Store, list_t):{
+            if(self.queue == nil)
+                self.queue = [[[NSOperationQueue alloc] init] autorelease];
+            HomePageParse *parser = [[HomePageParse alloc] initWithData:self.weiboListData delegate:nil];
+            parser.capability = MakeID(data_Store, list_t);
+            [self.queue addOperation:parser];
+            [parser release];
+        }
+            break;
+        case MakeID(time_line, mentions_timeline):{
+            if(self.queue == nil)
+                self.queue = [[[NSOperationQueue alloc] init] autorelease];
+            HomePageParse *parser = [[HomePageParse alloc] initWithData:self.weiboListData delegate:nil];
+            parser.capability = MakeID(time_line, mentions_timeline);
+            [self.queue addOperation:parser];
+            [parser release];
+        }
+            break;
+        case MakeID(time_line, headdownload):{
+            UIImage *image = [[UIImage alloc] initWithData:self.weiboListData];
+            
+            if (image.size.width != kAppIconHeight && image.size.height != kAppIconHeight)
+            {
+                CGSize itemSize = CGSizeMake(kAppIconHeight, kAppIconHeight);
+                UIGraphicsBeginImageContext(itemSize);
+                CGRect imageRect = CGRectMake(0.0, 0.0, itemSize.width, itemSize.height);
+                [image drawInRect:imageRect];
+                if([self.tag isEqualToString:@"info"])
+                    self.inforesult.data.headImage = UIGraphicsGetImageFromCurrentImageContext();
+                else
+                    self.infoRecord.headImage = UIGraphicsGetImageFromCurrentImageContext();
+                UIGraphicsEndImageContext();
+            }
+            else
+            {
+                if([self.tag isEqualToString:@"info"])
+                    self.inforesult.data.headImage = image;
+                else
+                    self.infoRecord.headImage = image;
+            }
+            [image release];
+            BusinessFramework *frame = [BusinessFramework defaultBusinessFramework];
+            if([self.tag isEqualToString:@"homepage"])
+                [frame broadcastBusinessListener:MakeID(time_line, headdownload) withInparam:self.indexPathInTableView];
+            else if([self.tag isEqualToString:@"collect"])
+                [frame broadcastBusinessListener:MakeID(time_line, headdownload2) withInparam:self.indexPathInTableView];
+            else if([self.tag isEqualToString:@"mention"])
+                [frame broadcastBusinessListener:MakeID(time_line, headdownload3) withInparam:self.indexPathInTableView];
+            else if([self.tag isEqualToString:@"info"])
+                [frame broadcastBusinessListener:MakeID(time_line, head) withInparam:nil];
+        }
+            break;
+        default:
+            break;
+    }
+    self.weiboListData=nil;
+    self.connection = nil;
+    
+}
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+	
+	self.weiboListData = [NSMutableData data];
+}
+
+@end

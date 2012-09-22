@@ -1,0 +1,173 @@
+//
+//  QVerifyWebViewController.m
+//  QWeiboSDK4iOSDemo
+//
+//  Created   on 11-1-14.
+//   
+//
+
+#import "QVerifyWebViewController.h"
+#import "tabbarAppDelegate.h"
+#import "QWeiboSyncApi.h"
+#import "tabbarViewController.h"
+#import "HomePage.h"
+#import "Mention.h"
+#import "Squar.h"
+#import "PrivateLetter.h"
+#import "Information.h"
+#define VERIFY_URL @"http://open.t.qq.com/cgi-bin/authorize?oauth_token="
+
+@implementation QVerifyWebViewController
+// The designated initializer.  Override if you create the controller programmatically and want to perform customization that is not appropriate for viewDidLoad.
+- (void)drawTableBarView
+{
+    UITabBarController *tabBar=[[UITabBarController alloc] init];
+    HomePage *weiBoHomePage=[[HomePage alloc] init];
+    weiBoHomePage.title=@"提及";
+    UINavigationController *homePageNav=[[UINavigationController alloc] initWithRootViewController:weiBoHomePage];
+    [weiBoHomePage release];
+    homePageNav.tabBarItem.title=@"提及";
+    homePageNav.tabBarItem.image=[UIImage imageNamed:@""];
+    
+    Mention *weiBoMention=[[Mention alloc] init];
+    weiBoMention.title=@"主页";
+    UINavigationController *mentionNav=[[UINavigationController alloc] initWithRootViewController:weiBoMention];
+    [weiBoMention release];
+    mentionNav.tabBarItem.title=@"主页";
+    mentionNav.tabBarItem.image=[UIImage imageNamed:@""];
+    
+    Squar *weiBoSquar=[[Squar alloc] init];
+    weiBoSquar.title=@"广场";
+    UINavigationController *squarNav=[[UINavigationController alloc] initWithRootViewController:weiBoSquar];
+    [weiBoSquar release];
+    squarNav.tabBarItem.title=@"广场";
+    squarNav.tabBarItem.image=[UIImage imageNamed:@""];
+    
+    PrivateLetter *weiBoPrivateLetter=[[PrivateLetter alloc] init];
+    weiBoPrivateLetter.title=@"私信";
+    UINavigationController *privateLetterNav=[[UINavigationController alloc] initWithRootViewController:weiBoPrivateLetter];
+    [weiBoPrivateLetter release];
+    privateLetterNav.tabBarItem.title=@"私信";
+    privateLetterNav.tabBarItem.image=[UIImage imageNamed:@""];
+    
+    Information *weiBoInformation=[[Information alloc] init];
+    weiBoInformation.title=@"资料";
+    UINavigationController *informationNav=[[UINavigationController alloc] initWithRootViewController:weiBoInformation];
+    [weiBoInformation release];
+    informationNav.tabBarItem.title=@"资料";
+    informationNav.tabBarItem.image=[UIImage imageNamed:@""];
+    
+    NSArray *ctrlArray=[[NSArray alloc] initWithObjects:mentionNav,homePageNav,informationNav, nil];
+    tabBar.viewControllers=ctrlArray;
+    tabBar.selectedIndex=0;
+    [ctrlArray release];
+    [homePageNav release];
+    [mentionNav release];
+    [squarNav release];
+    [privateLetterNav release];
+    [informationNav release];
+    tabBar.modalTransitionStyle=UIModalTransitionStyleFlipHorizontal;
+    [self presentModalViewController:tabBar animated:YES];
+    [tabBar release];}
+
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization.
+    }
+    return self;
+}
+
+
+
+// Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
+- (void)viewDidLoad {
+    [super viewDidLoad];
+	mWebView = [[UIWebView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 320.0f, 480.0f)];
+	mWebView.delegate = self;
+	[self.view addSubview:mWebView];
+	
+	tabbarAppDelegate *appDelegate = 
+		(tabbarAppDelegate *)[[UIApplication sharedApplication] delegate];
+	NSString *url = [NSString stringWithFormat:@"%@%@", VERIFY_URL, appDelegate.tokenKey];
+	NSURL *requestUrl = [NSURL URLWithString:url];
+	NSURLRequest *request = [NSURLRequest requestWithURL:requestUrl];
+	[mWebView loadRequest:request];
+}
+
+
+/*
+// Override to allow orientations other than the default portrait orientation.
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+    // Return YES for supported orientations.
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+*/
+
+- (void)didReceiveMemoryWarning {
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Release any cached data, images, etc. that aren't in use.
+}
+
+- (void)viewDidUnload {
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+
+- (void)dealloc {
+    [super dealloc];
+}
+
+#pragma mark -
+#pragma mark private methods
+
+-(NSString*) valueForKey:(NSString *)key ofQuery:(NSString*)query
+{
+	NSArray *pairs = [query componentsSeparatedByString:@"&"];
+	for(NSString *aPair in pairs){
+		NSArray *keyAndValue = [aPair componentsSeparatedByString:@"="];
+		if([keyAndValue count] != 2) continue;
+		if([[keyAndValue objectAtIndex:0] isEqualToString:key]){
+			return [keyAndValue objectAtIndex:1];
+		}
+	}
+	return nil;
+}
+
+#pragma mark -
+#pragma mark UIWebViewDelegate
+
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType{
+	
+	NSString *query = [[request URL] query];
+	NSString *verifier = [self valueForKey:@"oauth_verifier" ofQuery:query];
+	
+	if (verifier && ![verifier isEqualToString:@""]) {
+		
+		tabbarAppDelegate *appDelegate = 
+			(tabbarAppDelegate *)[[UIApplication sharedApplication] delegate];
+		
+		QWeiboSyncApi *api = [[[QWeiboSyncApi alloc] init] autorelease];
+		NSString *retString = [api getAccessTokenWithConsumerKey:appDelegate.appKey 
+												  consumerSecret:appDelegate.appSecret 
+												 requestTokenKey:appDelegate.tokenKey 
+											  requestTokenSecret:appDelegate.tokenSecret 
+														  verify:verifier];
+		NSLog(@"\nget access token:%@", retString);
+		[appDelegate parseTokenKeyWithResponse:retString];
+		[appDelegate saveDefaultKey];//access token
+		NSLog(@"HAHHAH");
+		[self drawTableBarView];
+		return NO;
+	}
+	
+	return YES;
+}
+
+
+@end
